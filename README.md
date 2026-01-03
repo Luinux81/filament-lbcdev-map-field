@@ -1,6 +1,14 @@
 # Filament Map Field
 
+[![Filament v3](https://img.shields.io/badge/Filament-v3-orange?style=flat-square)](https://filamentphp.com)
+[![Filament v4](https://img.shields.io/badge/Filament-v4-orange?style=flat-square)](https://filamentphp.com)
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue?style=flat-square)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-10%20%7C%2011%20%7C%2012-red?style=flat-square)](https://laravel.com)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+
 Un paquete de Filament que proporciona componentes de campo de mapa para formularios e infolists, utilizando el componente Livewire [lbcdev-map](https://github.com/Luinux81/livewire-lbcdev-component-map).
+
+> **✨ Compatible con Filament v3 y v4** - Actualiza sin preocupaciones, sin cambios en tu código.
 
 ## ✨ Características
 
@@ -11,14 +19,17 @@ Un paquete de Filament que proporciona componentes de campo de mapa para formula
 - ⚡ Actualización reactiva de coordenadas
 - 🎨 Compatible con el tema de Filament
 - 🔧 Altamente configurable
+- ✨ **Compatible con Filament v3 y v4** - Sin cambios necesarios al actualizar
 
 ## 📋 Requisitos
 
-- PHP 8.1 o superior
-- Laravel 10.x o 11.x
-- Filament 3.x
+- PHP 8.1+ (PHP 8.2+ recomendado para Filament v4)
+- Laravel 10.x, 11.x o 12.x
+- **Filament 3.x o 4.x** ✨
 - Livewire 3.x
 - [lbcdev/livewire-map-component](https://github.com/Luinux81/livewire-lbcdev-component-map) ^1.0
+
+> **Nota:** Este paquete es compatible con **Filament v3 y v4**. No necesitas hacer cambios en tu código al actualizar de Filament v3 a v4.
 
 ## 📦 Instalación
 
@@ -310,12 +321,64 @@ php artisan vendor:publish --tag=filament-map-field-views
 ```
 
 Las vistas estarán disponibles en:
+
 - `resources/views/vendor/filament-map-field/forms/components/map-field.blade.php`
 - `resources/views/vendor/filament-map-field/infolists/entries/map-entry.blade.php`
+
+## 🔄 Compatibilidad con Filament v3 y v4
+
+Este paquete es **totalmente compatible** con Filament v3 y v4 sin necesidad de cambios en tu código.
+
+### ¿Qué significa esto?
+
+- ✅ Puedes usar este paquete con Filament v3
+- ✅ Puedes usar este paquete con Filament v4
+- ✅ Al actualizar de Filament v3 a v4, **no necesitas cambiar nada** en el código que usa este paquete
+- ✅ El paquete detecta automáticamente la versión de Filament y se adapta
+
+### Requisitos según la versión de Filament
+
+#### Para Filament v3
+
+- PHP 8.1+
+- Laravel 10.x o 11.x
+- Tailwind CSS 3.x (si usas tema personalizado)
+
+#### Para Filament v4
+
+- PHP 8.2+
+- Laravel 11.28+ o 12.x
+- Tailwind CSS 4.x (si usas tema personalizado)
+
+### Actualización de Filament v3 a v4
+
+Si estás actualizando tu proyecto de Filament v3 a v4:
+
+1. **Actualiza Filament** siguiendo la [guía oficial de actualización](https://filamentphp.com/docs/4.x/support/upgrade-guide)
+2. **Actualiza las dependencias**:
+
+   ```bash
+   composer update
+   ```
+
+3. **¡Listo!** El paquete `filament-map-field` seguirá funcionando sin cambios
+
+No necesitas:
+
+- ❌ Cambiar el código de tus Resources
+- ❌ Modificar las llamadas a `MapField` o `MapEntry`
+- ❌ Actualizar la sintaxis del paquete
+
+### Nota sobre Tailwind CSS
+
+Si usas un **tema personalizado** en Filament, necesitarás actualizar Tailwind CSS de v3 a v4 al migrar a Filament v4. Esto es un requisito de Filament, no de este paquete específicamente.
+
+Consulta la [guía de actualización de Tailwind CSS v4](https://tailwindcss.com/docs/upgrade-guide) para más detalles.
 
 ## 🤝 Créditos
 
 Este paquete utiliza:
+
 - [lbcdev/livewire-map-component](https://github.com/Luinux81/livewire-lbcdev-component-map) - Componente Livewire de mapas
 - [Leaflet.js](https://leafletjs.com/) - Biblioteca de mapas interactivos
 - [Filament](https://filamentphp.com/) - Framework de administración para Laravel

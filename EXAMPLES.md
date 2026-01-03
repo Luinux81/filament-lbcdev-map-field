@@ -391,4 +391,3 @@ Infolists\Components\Section::make('Ubicación en el Mapa')
     ->collapsible()
     ->collapsed(false),
 ```
-
