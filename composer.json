@@ -1,0 +1,53 @@
+{
+    "name": "lbcdev/filament-map-field",
+    "description": "A Filament package providing map field components for forms and infolists using lbcdev-map Livewire component",
+    "keywords": [
+        "filament",
+        "laravel",
+        "map",
+        "field",
+        "coordinates",
+        "leaflet",
+        "infolist",
+        "form",
+        "livewire"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Luinux81",
+            "email": "luinux81@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "filament/filament": "^3.0",
+        "illuminate/contracts": "^10.0|^11.0",
+        "lbcdev/livewire-map-component": "^1.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lbcdev\\FilamentMapField\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Lbcdev\\FilamentMapField\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Lbcdev\\FilamentMapField\\FilamentMapFieldServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
