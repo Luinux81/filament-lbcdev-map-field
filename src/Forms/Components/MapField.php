@@ -80,6 +80,16 @@ class MapField extends Field
     }
 
     /**
+     * Make the field read-only (non-interactive)
+     * This is an alias for interactive(false) to maintain compatibility with Filament's standard API
+     */
+    public function readOnly(bool $condition = true): static
+    {
+        $this->interactive = !$condition;
+        return $this;
+    }
+
+    /**
      * Get the latitude field name
      */
     public function getLatitudeField(): ?string
@@ -141,7 +151,7 @@ class MapField extends Field
     public function getCoordinates(): array
     {
         $container = $this->getContainer();
-        
+
         if ($this->latitudeField && $this->longitudeField) {
             return [
                 'latitude' => data_get($container->getState(), $this->latitudeField),
@@ -155,4 +165,3 @@ class MapField extends Field
         ];
     }
 }
-

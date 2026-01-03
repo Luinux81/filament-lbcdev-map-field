@@ -96,6 +96,22 @@ MapField::make('location')
     ->interactive();           // Permitir interacción (default: true)
 ```
 
+#### Modo de solo lectura
+
+```php
+// Usando readOnly() - Compatible con la API estándar de Filament
+MapField::make('location')
+    ->latitude('latitude')
+    ->longitude('longitude')
+    ->readOnly();
+
+// O usando interactive(false) - Mismo resultado
+MapField::make('location')
+    ->latitude('latitude')
+    ->longitude('longitude')
+    ->interactive(false);
+```
+
 #### Ejemplo completo en un Resource
 
 ```php
@@ -230,6 +246,7 @@ class LocationResource extends Resource
 | `showPasteButton(bool $show = true)` | Mostrar botón para pegar coordenadas | `false` |
 | `showLabel(bool $show = true)` | Mostrar etiqueta con coordenadas | `true` |
 | `interactive(bool $interactive = true)` | Permitir interacción con el mapa | `true` |
+| `readOnly(bool $condition = true)` | Hacer el mapa de solo lectura (alias de `interactive(false)`) | `false` |
 
 ### MapEntry (Infolists)
 
@@ -380,6 +397,58 @@ No necesitas:
 Si usas un **tema personalizado** en Filament, necesitarás actualizar Tailwind CSS de v3 a v4 al migrar a Filament v4. Esto es un requisito de Filament, no de este paquete específicamente.
 
 Consulta la [guía de actualización de Tailwind CSS v4](https://tailwindcss.com/docs/upgrade-guide) para más detalles.
+
+## 🔄 Actualización del Paquete
+
+### Actualizar a una versión específica
+
+Para actualizar el paquete a una versión específica usando tags de GitHub:
+
+```bash
+# Actualizar a la última versión
+composer update lbcdev/filament-map-field
+
+# O instalar una versión específica por tag
+composer require lbcdev/filament-map-field:1.0.0
+```
+
+### Usar una versión específica en composer.json
+
+Puedes especificar la versión exacta en tu `composer.json`:
+
+```json
+{
+    "require": {
+        "lbcdev/filament-map-field": "^1.0"
+    }
+}
+```
+
+O usar un tag específico:
+
+```json
+{
+    "require": {
+        "lbcdev/filament-map-field": "1.0.0"
+    }
+}
+```
+
+### Verificar la versión instalada
+
+```bash
+composer show lbcdev/filament-map-field
+```
+
+### Limpiar caché después de actualizar
+
+Después de actualizar, es recomendable limpiar las cachés:
+
+```bash
+php artisan filament:cache-components
+php artisan view:clear
+php artisan cache:clear
+```
 
 ## 🤝 Créditos
 
