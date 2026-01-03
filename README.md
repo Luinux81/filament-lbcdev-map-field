@@ -51,6 +51,12 @@ El paquete depende de `lbcdev/livewire-map-component`, que requiere Leaflet.js. 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
 
+Con Filament v4 puedes usar un hook para incluir los tags de Leaflet. Agrega el siguiente código a tu archivo `app/Providers/AppServiceProvider.php`:
+
+```php
+
+```
+
 ### 3. (Opcional) Publicar las vistas
 
 Si deseas personalizar las vistas del componente:
