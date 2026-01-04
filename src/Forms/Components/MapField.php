@@ -148,20 +148,66 @@ class MapField extends Field
     /**
      * Get the current coordinates from the form
      */
+    // public function getCoordinates(): array
+    // {
+    //     $container = $this->getContainer();
+
+    //     if ($this->latitudeField && $this->longitudeField) {
+    //         return [
+    //             'latitude' => data_get($container->getState(), $this->latitudeField),
+    //             'longitude' => data_get($container->getState(), $this->longitudeField),
+    //         ];
+    //     }
+
+    //     return [
+    //         'latitude' => null,
+    //         'longitude' => null,
+    //     ];
+    // }
     public function getCoordinates(): array
     {
-        $container = $this->getContainer();
+        try {
+            if (!$this->latitudeField || !$this->longitudeField) {
+                return [
+                    'latitude' => null,
+                    'longitude' => null,
+                ];
+            }
 
-        if ($this->latitudeField && $this->longitudeField) {
+            $container = $this->getContainer();
+
+            if (!$container) {
+                return [
+                    'latitude' => null,
+                    'longitude' => null,
+                ];
+            }
+
+            // Try to get state without triggering validation
+            $state = null;
+
+            // First, try to get from the record if it exists (edit mode)
+            if (method_exists($container, 'getRecord') && $record = $container->getRecord()) {
+                $state = $record->toArray();
+            }
+            // Otherwise, try to get the raw state (create mode)
+            else {
+                // Use getRawState if available, otherwise getState
+                $state = method_exists($container, 'getRawState')
+                    ? $container->getRawState()
+                    : $container->getState();
+            }
+
             return [
-                'latitude' => data_get($container->getState(), $this->latitudeField),
-                'longitude' => data_get($container->getState(), $this->longitudeField),
+                'latitude' => data_get($state, $this->latitudeField),
+                'longitude' => data_get($state, $this->longitudeField),
+            ];
+        } catch (\Throwable $e) {
+            // If anything fails, return null coordinates
+            return [
+                'latitude' => null,
+                'longitude' => null,
             ];
         }
-
-        return [
-            'latitude' => null,
-            'longitude' => null,
-        ];
     }
 }
