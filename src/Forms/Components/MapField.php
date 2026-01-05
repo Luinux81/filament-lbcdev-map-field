@@ -198,9 +198,16 @@ class MapField extends Field
                     : $container->getState();
             }
 
+            $latitude = data_get($state, $this->latitudeField);
+            $longitude = data_get($state, $this->longitudeField);
+
+            // Convert empty strings to null and numeric strings to float
+            $latitude = $this->normalizeCoordinate($latitude);
+            $longitude = $this->normalizeCoordinate($longitude);
+
             return [
-                'latitude' => data_get($state, $this->latitudeField),
-                'longitude' => data_get($state, $this->longitudeField),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
             ];
         } catch (\Throwable $e) {
             // If anything fails, return null coordinates
@@ -209,5 +216,29 @@ class MapField extends Field
                 'longitude' => null,
             ];
         }
+    }
+
+    /**
+     * Normalize a coordinate value to float or null
+     */
+    protected function normalizeCoordinate($value): ?float
+    {
+        // If null or empty string, return null
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        // If already a float, return as is
+        if (is_float($value)) {
+            return $value;
+        }
+
+        // If it's a numeric string, convert to float
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        // Otherwise, return null
+        return null;
     }
 }
