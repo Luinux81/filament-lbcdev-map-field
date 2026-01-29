@@ -366,20 +366,20 @@ Infolists\Components\Section::make('Ubicación en el Mapa')
                     ->numeric(decimalPlaces: 6)
                     ->copyable()
                     ->icon('heroicon-o-map-pin'),
-                
+
                 Infolists\Components\TextEntry::make('longitude')
                     ->label('Longitud')
                     ->numeric(decimalPlaces: 6)
                     ->copyable()
                     ->icon('heroicon-o-map-pin'),
-                
+
                 Infolists\Components\TextEntry::make('coordinates')
                     ->label('Coordenadas')
                     ->state(fn ($record) => "{$record->latitude}, {$record->longitude}")
                     ->copyable()
                     ->icon('heroicon-o-clipboard'),
             ]),
-        
+
         MapEntry::make('map')
             ->label(false)
             ->latitude('latitude')
@@ -391,3 +391,268 @@ Infolists\Components\Section::make('Ubicación en el Mapa')
     ->collapsible()
     ->collapsed(false),
 ```
+
+## Ejemplo 7: Campos JSON Anidados (v1.1.0+)
+
+Este ejemplo muestra cómo usar campos JSON anidados para almacenar coordenadas en una estructura JSON en lugar de campos separados.
+
+### Migración
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('stores', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('address', 500)->nullable();
+            $table->json('ubicacion')->nullable(); // Campo JSON para coordenadas
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('stores');
+    }
+};
+```
+
+### Modelo
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Store extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'description',
+        'address',
+        'ubicacion',
+    ];
+
+    protected $casts = [
+        'ubicacion' => 'array', // Cast a array para manejar JSON
+    ];
+
+    // Accessor para obtener la latitud
+    public function getLatitudAttribute(): ?float
+    {
+        return $this->ubicacion['latitud'] ?? null;
+    }
+
+    // Accessor para obtener la longitud
+    public function getLongitudAttribute(): ?float
+    {
+        return $this->ubicacion['longitud'] ?? null;
+    }
+}
+```
+
+### Resource con MapField
+
+```php
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Models\Store;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Lbcdev\FilamentMapField\Forms\Components\MapField;
+use Lbcdev\FilamentMapField\Infolists\Entries\MapEntry;
+
+class StoreResource extends Resource
+{
+    protected static ?string $model = Store::class;
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Información de la Tienda')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descripción')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('address')
+                            ->label('Dirección')
+                            ->maxLength(500)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                Forms\Components\Section::make('Ubicación')
+                    ->description('Selecciona la ubicación de la tienda en el mapa')
+                    ->schema([
+                        // Usando notación de punto para campos JSON anidados
+                        MapField::make('ubicacion')
+                            ->label('Ubicación en el mapa')
+                            ->latitude('ubicacion.latitud')
+                            ->longitude('ubicacion.longitud')
+                            ->height(500)
+                            ->zoom(15)
+                            ->showPasteButton()
+                            ->showLabel()
+                            ->columnSpanFull()
+                            ->helperText('Las coordenadas se guardarán en formato JSON: {"latitud": "...", "longitud": "..."}'),
+                    ]),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('address')
+                    ->label('Dirección')
+                    ->searchable()
+                    ->limit(50),
+
+                Tables\Columns\TextColumn::make('latitud')
+                    ->label('Latitud')
+                    ->numeric(decimalPlaces: 6)
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('longitud')
+                    ->label('Longitud')
+                    ->numeric(decimalPlaces: 6)
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Información de la Tienda')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('name')
+                            ->label('Nombre'),
+
+                        Infolists\Components\TextEntry::make('description')
+                            ->label('Descripción')
+                            ->columnSpanFull(),
+
+                        Infolists\Components\TextEntry::make('address')
+                            ->label('Dirección')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                Infolists\Components\Section::make('Ubicación')
+                    ->schema([
+                        Infolists\Components\Grid::make(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('latitud')
+                                    ->label('Latitud')
+                                    ->numeric(decimalPlaces: 6)
+                                    ->copyable(),
+
+                                Infolists\Components\TextEntry::make('longitud')
+                                    ->label('Longitud')
+                                    ->numeric(decimalPlaces: 6)
+                                    ->copyable(),
+                            ]),
+
+                        // Usando notación de punto para leer campos JSON anidados
+                        MapEntry::make('ubicacion')
+                            ->label('Mapa')
+                            ->latitude('ubicacion.latitud')
+                            ->longitude('ubicacion.longitud')
+                            ->height(400)
+                            ->zoom(15)
+                            ->showLabel()
+                            ->columnSpanFull(),
+                    ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListStores::route('/'),
+            'create' => Pages\CreateStore::route('/create'),
+            'view' => Pages\ViewStore::route('/{record}'),
+            'edit' => Pages\EditStore::route('/{record}/edit'),
+        ];
+    }
+}
+```
+
+### Resultado en la Base de Datos
+
+Cuando guardas un registro con el formulario anterior, el campo `ubicacion` se almacena como JSON:
+
+```json
+{
+    "latitud": "40.416775",
+    "longitud": "-3.703790"
+}
+```
+
+### Ventajas de este Enfoque
+
+1. **Agrupación lógica**: Las coordenadas están agrupadas en un solo campo JSON
+2. **Flexibilidad**: Puedes agregar más datos relacionados con la ubicación en el mismo campo JSON
+3. **Nombres personalizados**: Usa los nombres que prefieras (latitud/longitud, lat/lng, etc.)
+4. **Compatibilidad**: Funciona perfectamente con el modo tradicional de campos separados

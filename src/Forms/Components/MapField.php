@@ -147,6 +147,10 @@ class MapField extends Field
 
     /**
      * Get the current coordinates from the form
+     *
+     * Supports both simple field names and dot notation for nested fields:
+     * - Simple: 'latitude', 'longitude'
+     * - Nested: 'ubicacion.latitud', 'ubicacion.longitud'
      */
     public function getCoordinates(): array
     {

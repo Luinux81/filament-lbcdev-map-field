@@ -16,6 +16,7 @@ Un paquete de Filament que proporciona componentes de campo de mapa para formula
 - 📋 **MapEntry** para infolists Filament (solo lectura)
 - 🎯 Integración perfecta con el componente Livewire lbcdev-map
 - 📍 Soporte para campos de latitud/longitud separados
+- 🔄 **Soporte para campos JSON anidados** (v1.1.0+) - Usa notación de punto: `'ubicacion.latitud'`
 - ⚡ Actualización reactiva de coordenadas
 - 🎨 Compatible con el tema de Filament
 - 🔧 Altamente configurable
@@ -167,7 +168,7 @@ class LocationResource extends Resource
 
 El componente `MapEntry` muestra las coordenadas en un mapa de solo lectura en infolists.
 
-#### Uso básico
+#### Uso básico de MapEntry
 
 ```php
 use Lbcdev\FilamentMapField\Infolists\Entries\MapEntry;
@@ -188,7 +189,7 @@ MapEntry::make('location')
     ->showLabel();
 ```
 
-#### Ejemplo completo en un Resource
+#### Ejemplo completo de un Resource
 
 ```php
 <?php
@@ -238,9 +239,9 @@ class LocationResource extends Resource
 ### MapField (Forms)
 
 | Método | Descripción | Default |
-|--------|-------------|---------|
-| `latitude(string $field)` | Campo donde se guardará la latitud | `null` |
-| `longitude(string $field)` | Campo donde se guardará la longitud | `null` |
+| ------ | ----------- | ------- |
+| `latitude(string $field)` | Campo donde se guardará la latitud. Soporta notación de punto para JSON: `'ubicacion.latitud'` | `null` |
+| `longitude(string $field)` | Campo donde se guardará la longitud. Soporta notación de punto para JSON: `'ubicacion.longitud'` | `null` |
 | `height(int $height)` | Altura del mapa en píxeles | `400` |
 | `zoom(int $zoom)` | Nivel de zoom inicial (1-20) | `15` |
 | `showPasteButton(bool $show = true)` | Mostrar botón para pegar coordenadas | `false` |
@@ -251,9 +252,9 @@ class LocationResource extends Resource
 ### MapEntry (Infolists)
 
 | Método | Descripción | Default |
-|--------|-------------|---------|
-| `latitude(string $field)` | Campo de donde leer la latitud | `null` |
-| `longitude(string $field)` | Campo de donde leer la longitud | `null` |
+| ------ | ----------- | ------- |
+| `latitude(string $field)` | Campo de donde leer la latitud. Soporta notación de punto para JSON: `'ubicacion.latitud'` | `null` |
+| `longitude(string $field)` | Campo de donde leer la longitud. Soporta notación de punto para JSON: `'ubicacion.longitud'` | `null` |
 | `height(int $height)` | Altura del mapa en píxeles | `300` |
 | `zoom(int $zoom)` | Nivel de zoom inicial (1-20) | `15` |
 | `showLabel(bool $show = true)` | Mostrar etiqueta con coordenadas | `true` |
@@ -333,6 +334,109 @@ Forms\Components\Tabs::make('Locations')
                     ->showPasteButton(),
             ]),
     ]),
+```
+
+### Campos JSON anidados (v1.1.0+)
+
+El paquete soporta guardar coordenadas en campos JSON anidados usando notación de punto. Esto es útil cuando quieres almacenar las coordenadas en una estructura JSON en lugar de campos separados.
+
+#### Modo 1: Campos separados (tradicional)
+
+```php
+// Migración
+Schema::create('locations', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->decimal('latitude', 10, 8)->nullable();
+    $table->decimal('longitude', 11, 8)->nullable();
+});
+
+// Formulario
+MapField::make('map')
+    ->latitude('latitude')
+    ->longitude('longitude');
+
+// Resultado en BD:
+// latitude: 40.416775
+// longitude: -3.703790
+```
+
+#### Modo 2: Campo JSON anidado (nuevo)
+
+```php
+// Migración
+Schema::create('locations', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->json('ubicacion')->nullable();
+});
+
+// Modelo
+class Location extends Model
+{
+    protected $casts = [
+        'ubicacion' => 'array',
+    ];
+}
+
+// Formulario
+MapField::make('ubicacion')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->height(500)
+    ->zoom(15)
+    ->showPasteButton();
+
+// Resultado en BD (campo JSON):
+// ubicacion: {"latitud": "40.416775", "longitud": "-3.703790"}
+```
+
+#### Ventajas del modo JSON
+
+- ✅ Agrupa coordenadas relacionadas en un solo campo
+- ✅ Facilita la gestión de múltiples ubicaciones
+- ✅ Permite nombres de campos personalizados (latitud/longitud, lat/lng, etc.)
+- ✅ 100% retrocompatible con el modo tradicional
+
+#### Ejemplo completo con JSON
+
+```php
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Models\Store;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Lbcdev\FilamentMapField\Forms\Components\MapField;
+
+class StoreResource extends Resource
+{
+    protected static ?string $model = Store::class;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('address')
+                    ->maxLength(255),
+
+                MapField::make('ubicacion')
+                    ->label('Ubicación en el mapa')
+                    ->latitude('ubicacion.latitud')
+                    ->longitude('ubicacion.longitud')
+                    ->height(500)
+                    ->zoom(15)
+                    ->showPasteButton()
+                    ->columnSpanFull(),
+            ]);
+    }
+}
 ```
 
 ## 🔧 Personalización
@@ -449,6 +553,15 @@ php artisan filament:cache-components
 php artisan view:clear
 php artisan cache:clear
 ```
+
+## 🐛 Solución de Problemas
+
+Si encuentras problemas al usar el paquete, consulta la [Guía de Solución de Problemas](TROUBLESHOOTING.md) que incluye:
+
+- ✅ El mapa no actualiza los campos del formulario
+- ✅ El mapa no se muestra
+- ✅ Problemas de estilos
+- ✅ Errores comunes y sus soluciones
 
 ## 🤝 Créditos
 
