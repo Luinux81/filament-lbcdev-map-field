@@ -29,6 +29,42 @@ class MapBoundsField extends Field
         // This prevents validation errors in create mode when using dot notation
         $this->default(null);
         $this->dehydrated(false); // Don't save this field itself, only the nested fields
+
+        // Add custom validation rules when the field is marked as required
+        $this->rule(function () {
+            return function (string $attribute, $value, \Closure $fail) {
+                // Only validate if the field is marked as required
+                if (!$this->isRequired()) {
+                    return;
+                }
+
+                // Get the container to access form state
+                $container = $this->getContainer();
+                if (!$container) {
+                    return;
+                }
+
+                // Get the state (works in both create and edit modes)
+                $state = method_exists($container, 'getRawState')
+                    ? $container->getRawState()
+                    : $container->getState();
+
+                // Check if all bound fields are set and have values
+                $swLat = data_get($state, $this->southWestLatField);
+                $swLng = data_get($state, $this->southWestLngField);
+                $neLat = data_get($state, $this->northEastLatField);
+                $neLng = data_get($state, $this->northEastLngField);
+
+                if (
+                    $swLat === null || $swLat === '' ||
+                    $swLng === null || $swLng === '' ||
+                    $neLat === null || $neLat === '' ||
+                    $neLng === null || $neLng === ''
+                ) {
+                    $fail('El campo de límites es requerido.');
+                }
+            };
+        });
     }
 
     /**

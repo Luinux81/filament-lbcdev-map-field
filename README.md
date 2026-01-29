@@ -421,7 +421,31 @@ MapBoundsEntry::make('area')
 
 ### Formulario con validación
 
+Los componentes `MapField` y `MapBoundsField` soportan el método `->required()` de forma nativa. Cuando se marca un campo como requerido, automáticamente valida que todos los campos anidados (latitud, longitud, límites) tengan valores.
+
 ```php
+// Ejemplo 1: MapField con validación requerida
+MapField::make('ubicacion')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->height(500)
+    ->zoom(15)
+    ->showPasteButton()
+    ->required() // ✅ Valida que latitud y longitud tengan valores
+    ->label('Ubicación'),
+
+// Ejemplo 2: MapBoundsField con validación requerida
+MapBoundsField::make('limites')
+    ->southWestLat('limites.latitud_min')
+    ->southWestLng('limites.longitud_min')
+    ->northEastLat('limites.latitud_max')
+    ->northEastLng('limites.longitud_max')
+    ->height(500)
+    ->zoom(13)
+    ->required() // ✅ Valida que todos los límites tengan valores
+    ->label('Límites del área'),
+
+// Ejemplo 3: Validación con campos separados (modo tradicional)
 Forms\Components\Grid::make(2)
     ->schema([
         Forms\Components\TextInput::make('latitude')
@@ -445,9 +469,10 @@ MapField::make('map')
     ->height(600)
     ->zoom(12)
     ->showPasteButton()
-    ->columnSpanFull()
-    ->required(),
+    ->columnSpanFull(),
 ```
+
+> **Nota:** El método `->required()` funciona tanto en modo Create como Edit. La validación se aplica automáticamente a los campos anidados configurados con notación de punto.
 
 ### Múltiples mapas en un formulario
 

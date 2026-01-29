@@ -1035,3 +1035,177 @@ class DeliveryZoneStatsWidget extends BaseWidget
 - **Zonas de Precio**: Tarifas diferentes según la ubicación
 - **Áreas de Restricción**: Zonas donde no se presta servicio
 - **Territorios de Ventas**: Asignación de vendedores por área geográfica
+
+---
+
+## Ejemplo 8: Validación con `required()`
+
+Los componentes `MapField` y `MapBoundsField` soportan validación nativa usando el método `->required()`. Cuando se marca un campo como requerido, automáticamente valida que todos los campos anidados tengan valores.
+
+### Caso de Uso: Recurso Localidad con Validación
+
+```php
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Models\Localidad;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Lbcdev\FilamentMapField\Forms\Components\MapField;
+use Lbcdev\FilamentMapField\Forms\Components\MapBoundsField;
+
+class LocalidadResource extends Resource
+{
+    protected static ?string $model = Localidad::class;
+    protected static ?string $navigationIcon = 'heroicon-s-globe-europe-africa';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('nombre')
+                    ->required()
+                    ->maxLength(255)
+                    ->label('Nombre de la Localidad'),
+
+                Forms\Components\Section::make('Ubicación')
+                    ->description('Define el punto central y los límites de la localidad')
+                    ->schema([
+                        // MapField con validación requerida
+                        MapField::make('ubicacion')
+                            ->latitude('ubicacion.latitud')
+                            ->longitude('ubicacion.longitud')
+                            ->height(500)
+                            ->zoom(15)
+                            ->showPasteButton()
+                            ->required() // ✅ Valida que latitud y longitud tengan valores
+                            ->columnSpan(1)
+                            ->label('Punto Central'),
+
+                        // MapBoundsField con validación requerida
+                        MapBoundsField::make('limites')
+                            ->southWestLat('limites.latitud_min')
+                            ->southWestLng('limites.longitud_min')
+                            ->northEastLat('limites.latitud_max')
+                            ->northEastLng('limites.longitud_max')
+                            ->height(500)
+                            ->zoom(13)
+                            ->required() // ✅ Valida que todos los límites tengan valores
+                            ->columnSpan('full')
+                            ->label('Límites del Área'),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+}
+```
+
+### Modelo Localidad
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Localidad extends Model
+{
+    protected $fillable = [
+        'nombre',
+        'ubicacion',
+        'limites',
+    ];
+
+    protected $casts = [
+        'ubicacion' => 'array',
+        'limites' => 'array',
+    ];
+}
+```
+
+### Migración
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('localidades', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre');
+            $table->json('ubicacion'); // { "latitud": 40.4168, "longitud": -3.7038 }
+            $table->json('limites');   // { "latitud_min": 40.4, "longitud_min": -3.8, ... }
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('localidades');
+    }
+};
+```
+
+### Comportamiento de la Validación
+
+#### ✅ En modo Create (Crear)
+- Si el usuario intenta guardar sin completar los campos del mapa, verá el mensaje: **"El campo de ubicación es requerido"** o **"El campo de límites es requerido"**
+- La validación se ejecuta automáticamente al intentar guardar el formulario
+- Los campos anidados (`ubicacion.latitud`, `ubicacion.longitud`, etc.) se validan correctamente
+
+#### ✅ En modo Edit (Editar)
+- Si el usuario borra los valores del mapa, la validación también se aplica
+- Funciona igual que en modo Create
+
+### Ventajas de usar `->required()`
+
+1. **Validación Automática**: No necesitas crear reglas de validación personalizadas
+2. **Funciona en Create y Edit**: La validación se aplica en ambos modos sin configuración adicional
+3. **Mensajes Claros**: Los usuarios reciben mensajes de error descriptivos
+4. **Compatible con Notación de Punto**: Funciona perfectamente con campos JSON anidados
+5. **Sin Conflictos**: No interfiere con otras validaciones del formulario
+
+### Personalizar Mensajes de Error
+
+Si quieres personalizar los mensajes de error, puedes usar el método `validationMessages()`:
+
+```php
+MapField::make('ubicacion')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->required()
+    ->validationMessages([
+        'required' => 'Por favor, selecciona una ubicación en el mapa.',
+    ]),
+
+MapBoundsField::make('limites')
+    ->southWestLat('limites.latitud_min')
+    ->southWestLng('limites.longitud_min')
+    ->northEastLat('limites.latitud_max')
+    ->northEastLng('limites.longitud_max')
+    ->required()
+    ->validationMessages([
+        'required' => 'Por favor, define los límites del área en el mapa.',
+    ]),
+```
+
+### Validación Condicional
+
+También puedes usar validación condicional con `requiredIf()`:
+
+```php
+MapField::make('ubicacion')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->requiredIf('tipo_negocio', 'fisico') // Solo requerido si es negocio físico
+    ->label('Ubicación del Negocio'),
+```

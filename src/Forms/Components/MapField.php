@@ -28,6 +28,35 @@ class MapField extends Field
         // This prevents validation errors in create mode when using dot notation
         $this->default(null);
         $this->dehydrated(false); // Don't save this field itself, only the nested fields
+
+        // Add custom validation rules when the field is marked as required
+        $this->rule(function () {
+            return function (string $attribute, $value, \Closure $fail) {
+                // Only validate if the field is marked as required
+                if (!$this->isRequired()) {
+                    return;
+                }
+
+                // Get the container to access form state
+                $container = $this->getContainer();
+                if (!$container) {
+                    return;
+                }
+
+                // Get the state (works in both create and edit modes)
+                $state = method_exists($container, 'getRawState')
+                    ? $container->getRawState()
+                    : $container->getState();
+
+                // Check if latitude and longitude fields are set and have values
+                $latitude = data_get($state, $this->latitudeField);
+                $longitude = data_get($state, $this->longitudeField);
+
+                if ($latitude === null || $latitude === '' || $longitude === null || $longitude === '') {
+                    $fail('El campo de ubicación es requerido.');
+                }
+            };
+        });
     }
 
     /**
