@@ -71,24 +71,60 @@ class MapEntry extends Entry
 
     public function getCoordinates(): ?array
     {
-        $record = $this->getRecord();
-        
-        if (!$record) {
-            return null;
-        }
+        try {
+            if (!$this->latitudeField || !$this->longitudeField) {
+                return null;
+            }
 
-        if ($this->latitudeField && $this->longitudeField) {
+            $record = $this->getRecord();
+
+            if (!$record) {
+                return null;
+            }
+
             $latitude = data_get($record, $this->latitudeField);
             $longitude = data_get($record, $this->longitudeField);
 
+            // Convert empty strings to null and numeric strings to float
+            $latitude = $this->normalizeCoordinate($latitude);
+            $longitude = $this->normalizeCoordinate($longitude);
+
+            // Only return if both coordinates are valid
             if ($latitude !== null && $longitude !== null) {
                 return [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                 ];
             }
+
+            return null;
+        } catch (\Throwable $e) {
+            // If anything fails, return null
+            return null;
+        }
+    }
+
+    /**
+     * Normalize a coordinate value to float or null
+     */
+    protected function normalizeCoordinate($value): ?float
+    {
+        // If null or empty string, return null
+        if ($value === null || $value === '') {
+            return null;
         }
 
+        // If already a float, return as is
+        if (is_float($value)) {
+            return $value;
+        }
+
+        // If it's a numeric string, convert to float
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        // Otherwise, return null
         return null;
     }
 }

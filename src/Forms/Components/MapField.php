@@ -152,20 +152,97 @@ class MapField extends Field
      * - Simple: 'latitude', 'longitude'
      * - Nested: 'ubicacion.latitud', 'ubicacion.longitud'
      */
+    // public function getCoordinates(): array
+    // {
+    //     $container = $this->getContainer();
+
+    //     if ($this->latitudeField && $this->longitudeField) {
+    //         return [
+    //             'latitude' => data_get($container->getState(), $this->latitudeField),
+    //             'longitude' => data_get($container->getState(), $this->longitudeField),
+    //         ];
+    //     }
+
+    //     return [
+    //         'latitude' => null,
+    //         'longitude' => null,
+    //     ];
+    // }
     public function getCoordinates(): array
     {
-        $container = $this->getContainer();
+        try {
+            if (!$this->latitudeField || !$this->longitudeField) {
+                return [
+                    'latitude' => null,
+                    'longitude' => null,
+                ];
+            }
 
-        if ($this->latitudeField && $this->longitudeField) {
+            $container = $this->getContainer();
+
+            if (!$container) {
+                return [
+                    'latitude' => null,
+                    'longitude' => null,
+                ];
+            }
+
+            // Try to get state without triggering validation
+            $state = null;
+
+            // First, try to get from the record if it exists (edit mode)
+            if (method_exists($container, 'getRecord') && $record = $container->getRecord()) {
+                $state = $record->toArray();
+            }
+            // Otherwise, try to get the raw state (create mode)
+            else {
+                // Use getRawState if available, otherwise getState
+                $state = method_exists($container, 'getRawState')
+                    ? $container->getRawState()
+                    : $container->getState();
+            }
+
+            $latitude = data_get($state, $this->latitudeField);
+            $longitude = data_get($state, $this->longitudeField);
+
+            // Convert empty strings to null and numeric strings to float
+            $latitude = $this->normalizeCoordinate($latitude);
+            $longitude = $this->normalizeCoordinate($longitude);
+
             return [
-                'latitude' => data_get($container->getState(), $this->latitudeField),
-                'longitude' => data_get($container->getState(), $this->longitudeField),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ];
+        } catch (\Throwable $e) {
+            // If anything fails, return null coordinates
+            return [
+                'latitude' => null,
+                'longitude' => null,
             ];
         }
+    }
 
-        return [
-            'latitude' => null,
-            'longitude' => null,
-        ];
+    /**
+     * Normalize a coordinate value to float or null
+     */
+    protected function normalizeCoordinate($value): ?float
+    {
+        // If null or empty string, return null
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        // If already a float, return as is
+        if (is_float($value)) {
+            return $value;
+        }
+
+        // If it's a numeric string, convert to float
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        // Otherwise, return null
+        return null;
     }
 }
