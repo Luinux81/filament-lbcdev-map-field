@@ -51,10 +51,18 @@ El paquete depende de `lbcdev/livewire-map-component`, que requiere Leaflet.js. 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
 
-Con Filament v4 puedes usar un hook para incluir los tags de Leaflet. Agrega el siguiente código a tu archivo `app/Providers/AppServiceProvider.php`:
+Con Filament v4 puedes usar un hook para incluir los tags de Leaflet. Agrega el siguiente código a tu archivo `app/Providers/Filament/AdminPanelProvider.php`:
 
 ```php
-
+    public function panel(Panel $panel): Panel{
+        return $panel
+            ...
+            ->renderHook(
+                'panels::head.end',
+                fn(): string => view('filament.hooks.leaflet-assets')->render()
+            )
+            ...
+    }
 ```
 
 ### 3. (Opcional) Publicar las vistas
@@ -238,7 +246,7 @@ class LocationResource extends Resource
 ### MapField (Forms)
 
 | Método | Descripción | Default |
-|--------|-------------|---------|
+| ------ | ----------- | ------- |
 | `latitude(string $field)` | Campo donde se guardará la latitud | `null` |
 | `longitude(string $field)` | Campo donde se guardará la longitud | `null` |
 | `height(int $height)` | Altura del mapa en píxeles | `400` |
@@ -251,7 +259,7 @@ class LocationResource extends Resource
 ### MapEntry (Infolists)
 
 | Método | Descripción | Default |
-|--------|-------------|---------|
+| ------ | ----------- | ------- |
 | `latitude(string $field)` | Campo de donde leer la latitud | `null` |
 | `longitude(string $field)` | Campo de donde leer la longitud | `null` |
 | `height(int $height)` | Altura del mapa en píxeles | `300` |
