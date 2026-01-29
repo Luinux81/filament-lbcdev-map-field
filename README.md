@@ -12,8 +12,10 @@ Un paquete de Filament que proporciona componentes de campo de mapa para formula
 
 ## ✨ Características
 
-- 🗺️ **MapField** para formularios Filament (interactivo)
-- 📋 **MapEntry** para infolists Filament (solo lectura)
+- 🗺️ **MapField** para formularios Filament (selección de puntos interactiva)
+- 📋 **MapEntry** para infolists Filament (visualización de puntos)
+- 📐 **MapBoundsField** para formularios Filament (selección de áreas rectangulares)
+- 📊 **MapBoundsEntry** para infolists Filament (visualización de áreas)
 - 🎯 Integración perfecta con el componente Livewire lbcdev-map
 - 📍 Soporte para campos de latitud/longitud separados
 - 🔄 **Soporte para campos JSON anidados** (v1.1.0+) - Usa notación de punto: `'ubicacion.latitud'`
@@ -50,7 +52,13 @@ El paquete depende de `lbcdev/livewire-map-component`, que requiere Leaflet.js. 
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Leaflet Draw (solo si usas MapBoundsField) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 ```
+
+> **Nota:** Leaflet Draw solo es necesario si vas a usar `MapBoundsField` para seleccionar áreas rectangulares. Si solo usas `MapField` para puntos, no es necesario incluirlo.
 
 Con Filament v4 puedes usar un hook para incluir los tags de Leaflet. Agrega el siguiente código a tu archivo `app/Providers/Filament/AdminPanelProvider.php`:
 
@@ -242,6 +250,77 @@ class LocationResource extends Resource
 }
 ```
 
+### MapBoundsField en Formularios
+
+El componente `MapBoundsField` permite a los usuarios seleccionar áreas rectangulares de forma interactiva en un formulario.
+
+#### Uso básico
+
+```php
+use Lbcdev\FilamentMapField\Forms\Components\MapBoundsField;
+
+MapBoundsField::make('area')
+    ->southWestLat('sw_lat')
+    ->southWestLng('sw_lng')
+    ->northEastLat('ne_lat')
+    ->northEastLng('ne_lng');
+```
+
+#### Con todas las opciones
+
+```php
+MapBoundsField::make('area')
+    ->southWestLat('sw_lat')        // Campo para latitud suroeste
+    ->southWestLng('sw_lng')        // Campo para longitud suroeste
+    ->northEastLat('ne_lat')        // Campo para latitud noreste
+    ->northEastLng('ne_lng')        // Campo para longitud noreste
+    ->height(500)                   // Altura del mapa en píxeles
+    ->zoom(13)                      // Nivel de zoom inicial
+    ->showLabel()                   // Mostrar etiqueta con coordenadas
+    ->defaultCenter(40.4168, -3.7038); // Centro por defecto (Madrid)
+```
+
+#### Con campos JSON anidados
+
+```php
+MapBoundsField::make('bounds')
+    ->southWestLat('bounds.sw_lat')
+    ->southWestLng('bounds.sw_lng')
+    ->northEastLat('bounds.ne_lat')
+    ->northEastLng('bounds.ne_lng')
+    ->height(500)
+    ->zoom(13);
+```
+
+### MapBoundsEntry en Infolists
+
+El componente `MapBoundsEntry` muestra áreas rectangulares en un mapa de solo lectura en infolists.
+
+#### Uso básico
+
+```php
+use Lbcdev\FilamentMapField\Infolists\Entries\MapBoundsEntry;
+
+MapBoundsEntry::make('area')
+    ->southWestLat('sw_lat')
+    ->southWestLng('sw_lng')
+    ->northEastLat('ne_lat')
+    ->northEastLng('ne_lng');
+```
+
+#### Con opciones
+
+```php
+MapBoundsEntry::make('area')
+    ->southWestLat('sw_lat')
+    ->southWestLng('sw_lng')
+    ->northEastLat('ne_lat')
+    ->northEastLng('ne_lng')
+    ->height(400)
+    ->zoom(13)
+    ->showLabel();
+```
+
 ## 🎨 Métodos Disponibles
 
 ### MapField (Forms)
@@ -266,6 +345,31 @@ class LocationResource extends Resource
 | `height(int $height)` | Altura del mapa en píxeles | `300` |
 | `zoom(int $zoom)` | Nivel de zoom inicial (1-20) | `15` |
 | `showLabel(bool $show = true)` | Mostrar etiqueta con coordenadas | `true` |
+
+### MapBoundsField (Forms)
+
+| Método | Descripción | Default |
+| ------ | ----------- | ------- |
+| `southWestLat(string $field)` | Campo para latitud suroeste. Soporta notación de punto: `'bounds.sw_lat'` | `null` |
+| `southWestLng(string $field)` | Campo para longitud suroeste. Soporta notación de punto: `'bounds.sw_lng'` | `null` |
+| `northEastLat(string $field)` | Campo para latitud noreste. Soporta notación de punto: `'bounds.ne_lat'` | `null` |
+| `northEastLng(string $field)` | Campo para longitud noreste. Soporta notación de punto: `'bounds.ne_lng'` | `null` |
+| `height(int $height)` | Altura del mapa en píxeles | `400` |
+| `zoom(int $zoom)` | Nivel de zoom inicial (1-20) | `13` |
+| `showLabel(bool $show = true)` | Mostrar etiqueta con coordenadas de los límites | `true` |
+| `defaultCenter(float $lat, float $lng)` | Centro por defecto del mapa | `[36.9990019, -6.5478919]` |
+
+### MapBoundsEntry (Infolists)
+
+| Método | Descripción | Default |
+| ------ | ----------- | ------- |
+| `southWestLat(string $field)` | Campo de donde leer latitud suroeste. Soporta notación de punto: `'bounds.sw_lat'` | `null` |
+| `southWestLng(string $field)` | Campo de donde leer longitud suroeste. Soporta notación de punto: `'bounds.sw_lng'` | `null` |
+| `northEastLat(string $field)` | Campo de donde leer latitud noreste. Soporta notación de punto: `'bounds.ne_lat'` | `null` |
+| `northEastLng(string $field)` | Campo de donde leer longitud noreste. Soporta notación de punto: `'bounds.ne_lng'` | `null` |
+| `height(int $height)` | Altura del mapa en píxeles | `300` |
+| `zoom(int $zoom)` | Nivel de zoom inicial (1-20) | `13` |
+| `showLabel(bool $show = true)` | Mostrar etiqueta con coordenadas de los límites | `true` |
 
 ## 💡 Ejemplos Avanzados
 

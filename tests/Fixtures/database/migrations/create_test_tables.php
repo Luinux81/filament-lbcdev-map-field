@@ -22,12 +22,24 @@ return new class extends Migration
             $table->string('name');
             $table->json('ubicacion')->nullable();
         });
+
+        // Table for bounds (traditional mode - separate fields)
+        Schema::create('areas', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->decimal('sw_lat', 10, 8)->nullable();
+            $table->decimal('sw_lng', 11, 8)->nullable();
+            $table->decimal('ne_lat', 10, 8)->nullable();
+            $table->decimal('ne_lng', 11, 8)->nullable();
+            $table->json('bounds')->nullable(); // For JSON mode
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
         Schema::dropIfExists('locations');
         Schema::dropIfExists('stores');
+        Schema::dropIfExists('areas');
     }
 };
-
