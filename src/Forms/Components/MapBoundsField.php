@@ -18,6 +18,20 @@ class MapBoundsField extends Field
     protected array $defaultCenter = [36.9990019, -6.5478919]; // Default center (Spain)
 
     /**
+     * Setup the field to not require validation
+     * This prevents issues when using dot notation with nested fields
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Make the field not required by default
+        // This prevents validation errors in create mode when using dot notation
+        $this->default(null);
+        $this->dehydrated(false); // Don't save this field itself, only the nested fields
+    }
+
+    /**
      * Set the south-west latitude field name
      * Supports dot notation for nested fields (e.g., 'bounds.sw_lat')
      */
@@ -165,8 +179,10 @@ class MapBoundsField extends Field
     {
         $container = $this->getContainer();
 
-        if ($this->southWestLatField && $this->southWestLngField && 
-            $this->northEastLatField && $this->northEastLngField) {
+        if (
+            $this->southWestLatField && $this->southWestLngField &&
+            $this->northEastLatField && $this->northEastLngField
+        ) {
             return [
                 'sw_lat' => data_get($container->getState(), $this->southWestLatField),
                 'sw_lng' => data_get($container->getState(), $this->southWestLngField),
@@ -183,4 +199,3 @@ class MapBoundsField extends Field
         ];
     }
 }
-

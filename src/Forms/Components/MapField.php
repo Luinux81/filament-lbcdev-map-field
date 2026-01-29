@@ -17,6 +17,20 @@ class MapField extends Field
     protected bool $interactive = true;
 
     /**
+     * Setup the field to not require validation
+     * This prevents issues when using dot notation with nested fields
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Make the field not required by default
+        // This prevents validation errors in create mode when using dot notation
+        $this->default(null);
+        $this->dehydrated(false); // Don't save this field itself, only the nested fields
+    }
+
+    /**
      * Set the latitude field name
      */
     public function latitude(string $field): static

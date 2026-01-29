@@ -180,6 +180,49 @@ class LocationResource extends Resource
 }
 ```
 
+#### ⚠️ Importante: Uso con Notación de Punto (JSON)
+
+Cuando uses notación de punto para campos JSON anidados, el **primer parámetro de `make()`** debe coincidir con el campo padre:
+
+```php
+// ✅ CORRECTO: make() usa el campo padre 'ubicacion'
+MapField::make('ubicacion')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->columnSpanFull();
+
+// ❌ INCORRECTO: make() usa 'map' pero los campos son 'ubicacion.latitud'
+// Esto causará error "The ubicación field is required" en modo create
+MapField::make('map')
+    ->latitude('ubicacion.latitud')
+    ->longitude('ubicacion.longitud')
+    ->columnSpanFull();
+```
+
+**Modelo con campo JSON:**
+
+```php
+class Store extends Model
+{
+    protected $fillable = ['name', 'ubicacion'];
+
+    protected $casts = [
+        'ubicacion' => 'array', // Campo JSON
+    ];
+}
+```
+
+**Migración:**
+
+```php
+Schema::create('stores', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->json('ubicacion')->nullable(); // Campo JSON
+    $table->timestamps();
+});
+```
+
 ### MapEntry en Infolists
 
 El componente `MapEntry` muestra las coordenadas en un mapa de solo lectura en infolists.
@@ -283,6 +326,7 @@ MapBoundsField::make('area')
 #### Con campos JSON anidados
 
 ```php
+// ✅ CORRECTO: make() usa el campo padre 'bounds'
 MapBoundsField::make('bounds')
     ->southWestLat('bounds.sw_lat')
     ->southWestLng('bounds.sw_lng')
@@ -291,6 +335,8 @@ MapBoundsField::make('bounds')
     ->height(500)
     ->zoom(13);
 ```
+
+> **Nota:** Al igual que con `MapField`, cuando uses notación de punto, el primer parámetro de `make()` debe coincidir con el campo padre JSON. Ver la sección "⚠️ Importante: Uso con Notación de Punto" arriba para más detalles.
 
 ### MapBoundsEntry en Infolists
 
